@@ -53,7 +53,7 @@ impl Datetime {
         let days = timestamp / TS_TO_DAYS;
         let years = days / DAYS_TO_FOURYEARS;
         let days = days % DAYS_TO_FOURYEARS;
-        
+
         // The last day for the leap year is the 366th, this is better to be handled separately
         if days == DAYS_TO_FOURYEARS - 1 {
             let years = 2004 + years * 4;
@@ -136,5 +136,44 @@ mod tests {
             "2024-04-05T10:01:31Z",
             Datetime::new(1712311291).format_iso8601(),
         );
+    }
+}
+
+#[cfg(test)]
+mod property_tests {
+    use super::*;
+    use proptest::prelude::*;
+    use time::format_description::well_known::{
+        iso8601::{Config, TimePrecision},
+        Iso8601,
+    };
+
+    const MAX_2099: u64 = 4102444799;
+
+    proptest! {
+        #[test]
+        fn it_should_be_the_same_as_chrono(ts in EPOCH_2001..MAX_2099) {
+            let chrono_date = chrono::DateTime::from_timestamp(ts as i64, 0)
+                .unwrap()
+                .format("%Y-%m-%dT%H:%M:%SZ")
+                .to_string();
+            let date = Datetime::new(ts).to_string();
+            assert_eq!(chrono_date, date);
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn it_should_be_the_same_as_time(
+            ts in EPOCH_2001..MAX_2099
+        ) {
+            const ISO: u128 = Config::DEFAULT.set_time_precision(TimePrecision::Second { decimal_digits: None }).encode();
+            let chrono_date = time::OffsetDateTime::from_unix_timestamp(ts as i64)
+                .unwrap()
+                .format(&Iso8601::<ISO>)
+                .unwrap();
+            let date = Datetime::new(ts).to_string();
+            assert_eq!(chrono_date, date);
+        }
     }
 }
