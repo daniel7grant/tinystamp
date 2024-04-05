@@ -1,4 +1,7 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    fmt::Display,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 const EPOCH_2000: u64 = 946684800;
 
@@ -11,6 +14,7 @@ const DAYS_TO_YEARS: u64 = 365;
 const MONTHS: [u64; 13] = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
 const LEAP_MONTHS: [u64; 13] = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366];
 
+#[derive(Debug)]
 pub struct Datetime {
     timestamp: u64,
 }
@@ -50,7 +54,14 @@ impl Datetime {
         let min = secs / SECONDS_TO_MINUTES;
         let sec = secs % SECONDS_TO_MINUTES;
 
-        (2000 + years, month as u64, days - month_start + 1, hour, min, sec)
+        (
+            2000 + years,
+            month as u64,
+            days - month_start + 1,
+            hour,
+            min,
+            sec,
+        )
     }
 
     pub fn format_iso8601(&self) -> String {
@@ -59,9 +70,9 @@ impl Datetime {
     }
 }
 
-impl ToString for Datetime {
-    fn to_string(&self) -> String {
-        self.format_iso8601()
+impl Display for Datetime {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.format_iso8601())
     }
 }
 
