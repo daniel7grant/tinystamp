@@ -1,0 +1,23 @@
+name: Test
+
+on:
+  push:
+
+jobs:
+  release:
+    name: Test the code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the tag
+        uses: actions/checkout@v4
+      - name: Add toolchain for Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: clippy
+      - name: Restore cached dependencies
+        uses: Swatinem/rust-cache@v2
+      - name: Lint code
+        run: cargo clippy
+      - name: Run tests
+        run: cargo test
