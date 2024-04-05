@@ -53,6 +53,13 @@ impl Datetime {
         let days = timestamp / TS_TO_DAYS;
         let years = days / DAYS_TO_FOURYEARS;
         let days = days % DAYS_TO_FOURYEARS;
+        
+        // The last day for the leap year is the 366th, this is better to be handled separately
+        if days == DAYS_TO_FOURYEARS - 1 {
+            let years = 2004 + years * 4;
+            return (years, 12, 31);
+        }
+
         let years = 2001 + years * 4 + days / DAYS_TO_YEARS;
         let days = days % DAYS_TO_YEARS;
         let months = if years % 4 == 0 { LEAP_MONTHS } else { MONTHS };
@@ -103,7 +110,7 @@ mod tests {
         assert_eq!((2023, 1, 31), Datetime::new(1675123200).date());
         assert_eq!((2023, 2, 28), Datetime::new(1677542400).date());
         assert_eq!((2023, 3, 1), Datetime::new(1677628800).date());
-        // assert_eq!((2023, 12, 31), Datetime::new(1703980800).date());
+        assert_eq!((2023, 12, 31), Datetime::new(1703980800).date());
         assert_eq!((2024, 1, 1), Datetime::new(1704067200).date());
         assert_eq!((2024, 1, 31), Datetime::new(1706659200).date());
         assert_eq!((2024, 2, 28), Datetime::new(1709078400).date());
@@ -111,7 +118,8 @@ mod tests {
         assert_eq!((2024, 3, 1), Datetime::new(1709251200).date());
         assert_eq!((2024, 4, 1), Datetime::new(1711929600).date());
         assert_eq!((2024, 4, 5), Datetime::new(1712311291).date());
-        // assert_eq!((2024, 12, 31), Datetime::new(1735603200).date());
+        assert_eq!((2024, 12, 30), Datetime::new(1735516800).date());
+        assert_eq!((2024, 12, 31), Datetime::new(1735603200).date());
     }
 
     #[test]
