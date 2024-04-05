@@ -1,7 +1,11 @@
 [package]
 name = "tinystamp"
+description = "A tiny, zero-dependencies crate to format a timestamp as an ISO-8601 string"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+documentation = "https://github.com/daniel7grant/tinystamp"
+repository = "https://github.com/daniel7grant/tinystamp"
 
 [dependencies]
 
