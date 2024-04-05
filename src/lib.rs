@@ -1,7 +1,15 @@
-use std::{
-    fmt::Display,
-    time::{SystemTime, UNIX_EPOCH},
-};
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+use alloc::{fmt::{self, Display, Formatter}, format, string::String};
+
+#[cfg(feature = "std")]
+use std::fmt::{self, Display, Formatter};
+
+#[cfg(feature = "std")]
+use std::time::{SystemTime, UNIX_EPOCH};
 
 const EPOCH_2000: u64 = 946684800;
 
@@ -24,6 +32,7 @@ impl Datetime {
         Self { timestamp }
     }
 
+    #[cfg(feature = "std")]
     pub fn now() -> Self {
         let timestamp = SystemTime::now();
         let duration = timestamp
@@ -71,7 +80,7 @@ impl Datetime {
 }
 
 impl Display for Datetime {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.write_str(&self.format_iso8601())
     }
 }
