@@ -4,7 +4,11 @@
 extern crate alloc;
 
 #[cfg(not(feature = "std"))]
-use alloc::{fmt::{self, Display, Formatter}, format, string::String};
+use alloc::{
+    fmt::{self, Display, Formatter},
+    format,
+    string::String,
+};
 
 #[cfg(feature = "std")]
 use std::fmt::{self, Display, Formatter};
@@ -12,7 +16,8 @@ use std::fmt::{self, Display, Formatter};
 #[cfg(feature = "std")]
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const EPOCH_2000: u64 = 946684800;
+/// 2001-01-01 as epoch timestamp
+const EPOCH_2001: u64 = 978307200;
 
 const TS_TO_DAYS: u64 = 24 * 60 * 60;
 const SECONDS_TO_HOUR: u64 = 60 * 60;
@@ -43,40 +48,34 @@ impl Datetime {
         Self::new(duration.as_secs())
     }
 
-    pub fn get_epoch_2000_timestamp(&self) -> u64 {
-        self.timestamp - EPOCH_2000
-    }
-
-    pub fn calculate_gregorian_date_time(&self) -> (u64, u64, u64, u64, u64, u64) {
-        let timestamp = self.get_epoch_2000_timestamp();
+    pub fn date(&self) -> (u64, u64, u64) {
+        let timestamp = self.timestamp - EPOCH_2001;
         let days = timestamp / TS_TO_DAYS;
         let years = days / DAYS_TO_FOURYEARS;
         let days = days % DAYS_TO_FOURYEARS;
-        let years = years * 4 + days / DAYS_TO_YEARS;
+        let years = 2001 + years * 4 + days / DAYS_TO_YEARS;
         let days = days % DAYS_TO_YEARS;
         let months = if years % 4 == 0 { LEAP_MONTHS } else { MONTHS };
         let month = months.into_iter().position(|m| m > days).unwrap();
         let month_start = *months.get(month - 1).unwrap();
 
+        (years, month as u64, days - month_start + 1)
+    }
+
+    pub fn time(&self) -> (u64, u64, u64) {
         let secs = self.timestamp % TS_TO_DAYS;
         let hour = secs / SECONDS_TO_HOUR;
         let secs = secs % SECONDS_TO_HOUR;
         let min = secs / SECONDS_TO_MINUTES;
         let sec = secs % SECONDS_TO_MINUTES;
 
-        (
-            2000 + years,
-            month as u64,
-            days - month_start + 1,
-            hour,
-            min,
-            sec,
-        )
+        (hour, min, sec)
     }
 
     pub fn format_iso8601(&self) -> String {
-        let (year, month, date, hour, min, sec) = self.calculate_gregorian_date_time();
-        format!("{year:0>4}-{month:0>2}-{date:0>2}T{hour:0>2}:{min:0>2}:{sec:0>2}+00:00")
+        let (year, month, day) = self.date();
+        let (hour, min, sec) = self.time();
+        format!("{year:0>4}-{month:0>2}-{day:0>2}T{hour:0>2}:{min:0>2}:{sec:0>2}Z")
     }
 }
 
@@ -100,28 +99,33 @@ mod tests {
 
     #[test]
     fn it_should_calculate_gregorian_dates() {
-        assert_eq!(
-            (2024, 1, 1, 0, 0, 0),
-            Datetime::new(1704067200).calculate_gregorian_date_time(),
-        );
-        assert_eq!(
-            (2024, 4, 1, 0, 0, 0),
-            Datetime::new(1711929600).calculate_gregorian_date_time(),
-        );
-        assert_eq!(
-            (2024, 4, 5, 10, 1, 31),
-            Datetime::new(1712311291).calculate_gregorian_date_time(),
-        );
-        // assert_eq!(
-        //     (2024, 12, 31, 0, 0, 0),
-        //     Datetime::new(1735603200).calculate_gregorian_date_time(),
-        // );
+        assert_eq!((2023, 1, 1), Datetime::new(1672531200).date());
+        assert_eq!((2023, 1, 31), Datetime::new(1675123200).date());
+        assert_eq!((2023, 2, 28), Datetime::new(1677542400).date());
+        assert_eq!((2023, 3, 1), Datetime::new(1677628800).date());
+        // assert_eq!((2023, 12, 31), Datetime::new(1703980800).date());
+        assert_eq!((2024, 1, 1), Datetime::new(1704067200).date());
+        assert_eq!((2024, 1, 31), Datetime::new(1706659200).date());
+        assert_eq!((2024, 2, 28), Datetime::new(1709078400).date());
+        assert_eq!((2024, 2, 29), Datetime::new(1709164800).date());
+        assert_eq!((2024, 3, 1), Datetime::new(1709251200).date());
+        assert_eq!((2024, 4, 1), Datetime::new(1711929600).date());
+        assert_eq!((2024, 4, 5), Datetime::new(1712311291).date());
+        // assert_eq!((2024, 12, 31), Datetime::new(1735603200).date());
+    }
+
+    #[test]
+    fn it_should_calculate_times() {
+        assert_eq!((0, 0, 0), Datetime::new(1672531200).time());
+        assert_eq!((10, 1, 31), Datetime::new(1712311291).time());
+        assert_eq!((11, 59, 59), Datetime::new(1712318399).time());
+        assert_eq!((23, 59, 59), Datetime::new(1712361599).time());
     }
 
     #[test]
     fn it_should_format_dates_according_to_iso8601() {
         assert_eq!(
-            "2024-04-05T10:01:31+00:00",
+            "2024-04-05T10:01:31Z",
             Datetime::new(1712311291).format_iso8601(),
         );
     }
