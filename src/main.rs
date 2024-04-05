@@ -1,6 +1,6 @@
 use tinystamp::Datetime;
 
-#[cfg(feature = "std")]
 fn main() {
+    #[cfg(feature = "std")]
     println!("{}", Datetime::now());
 }
