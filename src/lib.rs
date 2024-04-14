@@ -33,6 +33,18 @@ pub struct Datetime {
     timestamp: u64,
 }
 
+fn zeropad(mut number: u64, n: usize) -> String {
+    let mut s = String::with_capacity(n);
+    for i in 0..n {
+        let p = 10u64.pow((n - i - 1) as u32);
+        let rem = number / p;
+        dbg!(number, p, rem);
+        s.push(char::from_digit(rem as u32, 10).unwrap());
+        number -= p * rem;
+    }
+    s
+}
+
 impl Datetime {
     pub fn new(timestamp: u64) -> Self {
         Self { timestamp }
